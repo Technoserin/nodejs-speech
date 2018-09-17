@@ -96,15 +96,17 @@ module.exports = () => {
         // This entails that the user sends raw audio; it is wrapped in
         // the appropriate request structure.
         through.obj((obj, _, next) => {
-          let payload = {};
-          if (firstMessage && config !== undefined) {
-            // Write the initial configuration to the stream.
-            payload.streamingConfig = config;
+          if (firstMessage) {
+            // Send streamingConfig in a separate write.
+            requestStream.write({streamingConfig: config});
           }
 
+          let payload = {};
           if (Object.keys(obj || {}).length) {
             payload.audioContent = obj;
           }
+
+          firstMessage = false;
 
           next(null, payload);
         }),
