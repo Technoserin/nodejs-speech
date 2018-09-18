@@ -181,6 +181,7 @@ describe('Speech helper methods', () => {
       // Stub the underlying _streamingRecognize method to just return
       // a bogus stream.
       var requestStream = new stream.PassThrough({objectMode: true});
+
       sandbox
         .stub(client._innerApiCalls, 'streamingRecognize')
         .returns(requestStream);
@@ -188,12 +189,19 @@ describe('Speech helper methods', () => {
       var userStream = client.streamingRecognize(CONFIG, OPTIONS);
       var audioContent = Buffer.from('audio content');
 
+      var count = 0;
       requestStream._write = (data, enc, next) => {
-        assert.deepStrictEqual(data, {
-          audioContent: audioContent,
-          streamingConfig: CONFIG,
-        });
-        setImmediate(done);
+        if (count === 0)
+          assert.deepStrictEqual(data, {
+            streamingConfig: CONFIG,
+          });
+        else if (count === 1) {
+          assert.deepStrictEqual(data, {
+            audioContent: audioContent,
+          });
+          setImmediate(done);
+        }
+        count++;
         next(null, data);
       };
 
